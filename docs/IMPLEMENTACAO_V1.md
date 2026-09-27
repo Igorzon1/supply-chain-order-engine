@@ -88,9 +88,15 @@ As rotas de criação e consulta exigem HTTP Basic. O Compose lê `DB_PASSWORD` 
 
 A classe [`FirstScopeIntegrationTest`](../src/test/java/com/openerp/FirstScopeIntegrationTest.java) contém cinco cenários: recebimento único e custo médio; repetição e conflito da chave de idempotência; duas tentativas simultâneas com a mesma chave; disputa simultânea pela última unidade; e rollback de reserva de múltiplos itens quando um está indisponível. Os testes usam PostgreSQL temporário via Testcontainers. Alguns fixtures colocam saldo inicial diretamente na tabela para isolar a regra de reserva; eles não demonstram, por si só, a integridade completa entre saldo e ledger.
 
-**Verificado até agora:** `docker compose config -q` aceitou o arquivo Compose.
+**Verificações feitas em 27/09/2026 neste ambiente:**
 
-**Não verificado:** compilação, subida da API, aplicação real da migração e execução dos testes. Nesta máquina, `java -version` retorna Java 8, Maven não está no PATH e o daemon Docker não ficou disponível. A V1, portanto, **não deve ser apresentada como funcionalmente validada** até `docker compose up --build` e `mvn test` passarem em um ambiente com Docker ativo e JDK 21+.
+- `docker compose config -q` aceitou a configuração quando recebeu valores temporários apenas para validar a interpolação. Esses valores não foram salvos em arquivos nem usados como credenciais reais.
+- O comando `docker compose up --build` não conseguiu acessar o daemon Docker. O cliente não encontrou `//./pipe/docker_engine`, então não baixou imagens nem iniciou contêineres.
+- O arquivo `.env` local não existe. O projeto fornece `.env.example` sem senhas; é preciso copiá-lo para `.env` e preencher valores locais antes de iniciar o Compose.
+- `java -version` retorna Java 8 (`1.8.0_441`), enquanto o projeto requer JDK 21.
+- Maven não está no `PATH`; por isso, `mvn test` não foi executado.
+
+**Ainda não verificado:** compilação, subida da API, aplicação real da migração e execução dos testes de integração. A validação da configuração do Compose não comprova que a aplicação compila ou funciona. A V1, portanto, **não deve ser apresentada como funcionalmente validada** até `docker compose up --build` e `mvn test` passarem em um ambiente com Docker ativo, JDK 21+ e Maven.
 
 ## Fora da V1 e próximos cuidados
 
