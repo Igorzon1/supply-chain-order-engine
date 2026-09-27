@@ -90,13 +90,14 @@ A classe [`FirstScopeIntegrationTest`](../src/test/java/com/openerp/FirstScopeIn
 
 **Verificações feitas em 27/09/2026 neste ambiente:**
 
-- `docker compose config -q` aceitou a configuração quando recebeu valores temporários apenas para validar a interpolação. Esses valores não foram salvos em arquivos nem usados como credenciais reais.
-- O comando `docker compose up --build` não conseguiu acessar o daemon Docker. O cliente não encontrou `//./pipe/docker_engine`, então não baixou imagens nem iniciou contêineres.
-- O arquivo `.env` local não existe. O projeto fornece `.env.example` sem senhas; é preciso copiá-lo para `.env` e preencher valores locais antes de iniciar o Compose.
-- `java -version` retorna Java 8 (`1.8.0_441`), enquanto o projeto requer JDK 21.
-- Maven não está no `PATH`; por isso, `mvn test` não foi executado.
+- `docker build --quiet -t supply-chain-order-engine:validation .` concluiu com sucesso. O Dockerfile compilou e empacotou a aplicação com Maven 3.9 e JDK 21, dentro da imagem de build.
+- `mvn -B -ntp test` concluiu com sucesso dentro de `maven:3.9-eclipse-temurin-21`, com o socket Docker montado e `TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal`. Resultado: **5 testes, 0 falhas, 0 erros, 0 ignorados**.
+- O Testcontainers iniciou PostgreSQL 16.15 e o Flyway validou e aplicou a migração V1.
+- `docker compose up --build -d --wait` iniciou PostgreSQL e API em um projeto Compose temporário e isolado; ambos ficaram saudáveis.
+- Um smoke test REST percorreu cadastro de fornecedor, cliente e produto; criação e recebimento repetido de uma compra; consulta de saldo; e criação de pedido. O pedido terminou em `RESERVADO`; repetir a mesma chave de idempotência retornou o mesmo pedido. O saldo final foi físico `10`, reservado `2` e disponível `8`; o ledger continha uma entrada e uma reserva.
+- O projeto Compose temporário, seus contêineres e o volume de teste foram removidos ao final. As senhas aleatórias existiram apenas nos processos e contêineres temporários; nenhum `.env` foi criado.
 
-**Ainda não verificado:** compilação, subida da API, aplicação real da migração e execução dos testes de integração. A validação da configuração do Compose não comprova que a aplicação compila ou funciona. A V1, portanto, **não deve ser apresentada como funcionalmente validada** até `docker compose up --build` e `mvn test` passarem em um ambiente com Docker ativo, JDK 21+ e Maven.
+**Como reproduzir:** no host desta sessão, Java é 8 e Maven não está no `PATH`, mas a suíte foi executada com JDK 21 e Maven pelo comando Docker documentado no README. Para subir a API com o Compose normal, copie `.env.example` para `.env` e preencha `DB_PASSWORD` e `APP_STAFF_PASSWORD` com valores locais. A validação não incluiu teste de carga prolongado nem as funcionalidades que estão fora da V1.
 
 ## Fora da V1 e próximos cuidados
 

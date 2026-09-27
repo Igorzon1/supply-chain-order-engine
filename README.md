@@ -14,11 +14,26 @@ docker compose up --build
 
 A API estará em `http://localhost:8080`. O ambiente local usa autenticação HTTP Basic. O usuário padrão é `staff`, e a senha deve ser definida em `APP_STAFF_PASSWORD` no arquivo `.env`. Esta primeira entrega registra esse usuário como autor das operações. Não há login de cliente nem autorização por papel nesta etapa.
 
-Para executar os testes fora do Compose, é necessário JDK 21+, Maven e um mecanismo de contêineres ativo:
+Para executar os testes diretamente no host, é necessário JDK 21+, Maven e Docker ativo:
 
 ```sh
 mvn test
 ```
+
+No Windows, também é possível rodar Maven e JDK 21 dentro de um contêiner, sem instalá-los no host. Execute na raiz do projeto com Docker Desktop ativo:
+
+```powershell
+$projectPath = (Get-Location).Path
+docker run --rm `
+  -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal `
+  --mount "type=bind,source=$projectPath,target=/workspace" `
+  --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock" `
+  --mount "type=volume,source=supply-chain-maven-cache,target=/root/.m2" `
+  -w /workspace `
+  maven:3.9-eclipse-temurin-21 mvn -B -ntp test
+```
+
+O volume `supply-chain-maven-cache` guarda as dependências Maven entre execuções. O socket permite que o Testcontainers inicie o PostgreSQL temporário; `TESTCONTAINERS_HOST_OVERRIDE` permite que o contêiner de teste acesse as portas publicadas pelo Docker Desktop.
 
 Testcontainers inicia um PostgreSQL temporário. Redis não faz parte desta entrega.
 
