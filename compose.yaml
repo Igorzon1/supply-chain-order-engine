@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: openerp
+      POSTGRES_USER: openerp
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no arquivo .env}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openerp -d openerp"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/openerp
+      DB_USER: openerp
+      DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no arquivo .env}
+      APP_STAFF_USER: staff
+      APP_STAFF_PASSWORD: ${APP_STAFF_PASSWORD:?Defina APP_STAFF_PASSWORD no arquivo .env}
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  dbdata:

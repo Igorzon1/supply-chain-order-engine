@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/openerp}
+    username: ${DB_USER:openerp}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  threads:
+    virtual:
+      enabled: true
+app:
+  staff:
+    username: ${APP_STAFF_USER:staff}
+    password: ${APP_STAFF_PASSWORD}
